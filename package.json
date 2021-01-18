@@ -1,12 +1,17 @@
 {
   "name": "@corets/use-async",
-  "version": "0.0.1-0",
+  "version": "0.0.1-1",
   "author": "Maxim Kott",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/types/index.d.ts",
-  "keywords": ["corets", "hooks", "react", "async"],
+  "keywords": [
+    "corets",
+    "hooks",
+    "react",
+    "async"
+  ],
   "files": [
     "/dist"
   ],
@@ -31,7 +36,6 @@
     "@corets/promise-helpers": "^0.0.1-2"
   },
   "devDependencies": {
-    "microbundle": "^0.13.0",
     "@types/enzyme": "^3.10.5",
     "@types/jest": "^25.1.4",
     "@types/react": "^16.9.23",
@@ -39,6 +43,7 @@
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.2",
     "jest": "^25.1.0",
+    "microbundle": "^0.13.0",
     "prettier": "2.2.1",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
