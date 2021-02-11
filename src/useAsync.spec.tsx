@@ -3,6 +3,8 @@ import { mount } from "enzyme"
 import { AsyncHandle, useAsync } from "./index"
 import { createPromise, createTimeout } from "@corets/promise-helpers"
 import { act } from "react-dom/test-utils"
+import { createValue } from "@corets/value"
+import { useValue } from "@corets/use-value"
 
 describe("useAsync", () => {
   it("loads async action", async () => {
@@ -535,6 +537,102 @@ describe("useAsync", () => {
     expect(receivedHandle!.cancelled).toBe(false)
     expect(receivedHandle!.errored).toBe(false)
     expect(receivedHandle!.result).toBe("resolved result")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
+  it("handles simulatneous invocatios", async () => {
+    const promises = {}
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+    const sharedCount = createValue(0)
+
+    const Test = () => {
+      const count = useValue(sharedCount).get()
+      renders++
+      receivedHandle = useAsync(() => {
+        const promise = createPromise()
+
+        promises[count] = promise
+
+        return promise
+      }, [count])
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(2)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+    expect(sharedCount.get()).toBe(0)
+    expect(!!promises[0]).toBe(true)
+
+    await act(() => {
+      sharedCount.set(1)
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(4)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+    expect(sharedCount.get()).toBe(1)
+    expect(!!promises[1]).toBe(true)
+
+    await act(() => {
+      sharedCount.set(2)
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(6)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+    expect(sharedCount.get()).toBe(2)
+    expect(!!promises[2]).toBe(true)
+
+    await act(() => {
+      promises[0].resolve("result0")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(6)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promises[1].reject("reason1")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(6)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promises[2].resolve("result2")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(7)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result2")
     expect(receivedHandle!.error).toBe(undefined)
   })
 })

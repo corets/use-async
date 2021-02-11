@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   AsyncAction,
   AsyncCancel,
@@ -29,6 +29,7 @@ export const useAsync: UseAsync = <TResult>(
   const [status, setStatus] = useState(
     createAsyncStatus({ loading: receivedAnAction })
   )
+  const invocationRef = useRef(0)
 
   const reload: AsyncReload<TResult> = useCallback(
     async (newAction: AsyncAction<TResult> | undefined = action) => {
@@ -38,30 +39,37 @@ export const useAsync: UseAsync = <TResult>(
 
       setStatus(createAsyncStatus({ loading: true }))
 
+      const invocation = invocationRef.current + 1
+      invocationRef.current = invocation
+
       try {
         const result = await newAction()
 
-        setStatus((status) => {
-          if (status.cancelled || !status.loading) {
-            return status
-          }
+        if (invocation === invocationRef.current) {
+          setStatus((status) => {
+            if (status.cancelled || !status.loading) {
+              return status
+            }
 
-          return createAsyncStatus({
-            result: result,
+            return createAsyncStatus({
+              result: result,
+            })
           })
-        })
+        }
 
         return result
       } catch (error) {
-        setStatus(
-          createAsyncStatus({
-            errored: true,
-            error: error,
-          })
-        )
+        if (invocation === invocationRef.current) {
+          setStatus(
+            createAsyncStatus({
+              errored: true,
+              error: error,
+            })
+          )
+        }
       }
     },
-    [action]
+    [action, ...dependencies]
   )
 
   const cancel: AsyncCancel = useCallback(() => {
