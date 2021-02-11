@@ -540,7 +540,7 @@ describe("useAsync", () => {
     expect(receivedHandle!.error).toBe(undefined)
   })
 
-  it("handles simulatneous invocatios", async () => {
+  it("handles simultaneous invocations", async () => {
     const promises = {}
     let renders = 0
     let receivedHandle: AsyncHandle<any>
