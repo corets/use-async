@@ -41,6 +41,27 @@ describe("useAsync", () => {
     expect(receivedHandle!.error).toBe(undefined)
   })
 
+  it("loads with initial value", async () => {
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync("foo")
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(1)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("foo")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
   it("loads only if not cancelled", async () => {
     const promise = createPromise()
     let renders = 0
@@ -103,7 +124,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(3)
     expect(receivedHandle!.loading).toBe(false)
     expect(receivedHandle!.cancelled).toBe(false)
     expect(receivedHandle!.errored).toBe(false)
@@ -215,6 +236,64 @@ describe("useAsync", () => {
     expect(receivedHandle!.error).toBe(undefined)
   })
 
+  it("refreshes async action", async () => {
+    let promise = createPromise()
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync(() => promise)
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(2)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promise.resolve("result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(3)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result")
+    expect(receivedHandle!.error).toBe(undefined)
+
+    act(() => {
+      promise = createPromise()
+      receivedHandle.refresh()
+    })
+
+    expect(renders).toBe(4)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result")
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promise.resolve("new result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(5)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("new result")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
   it("reloads async action", async () => {
     let promise = createPromise()
     let renders = 0
@@ -262,6 +341,64 @@ describe("useAsync", () => {
 
     await act(() => {
       promise.resolve("new result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(5)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("new result")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
+  it("refreshes with new action", async () => {
+    let promise1 = createPromise()
+    let promise2 = createPromise()
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync(() => promise1)
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(2)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promise1.resolve("result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(3)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result")
+    expect(receivedHandle!.error).toBe(undefined)
+
+    act(() => {
+      receivedHandle.refresh(() => promise2)
+    })
+
+    expect(renders).toBe(4)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result")
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promise2.resolve("new result")
       return createTimeout(0)
     })
 
@@ -331,6 +468,52 @@ describe("useAsync", () => {
     expect(receivedHandle!.error).toBe(undefined)
   })
 
+  it("refreshes with sync action", async () => {
+    let promise = createPromise()
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync(() => promise)
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(2)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      promise.resolve("result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(3)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result")
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      receivedHandle.refresh(() => "new result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(5)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("new result")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
   it("reloads with sync action", async () => {
     let promise = createPromise()
     let renders = 0
@@ -370,6 +553,53 @@ describe("useAsync", () => {
     })
 
     expect(renders).toBe(5)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("new result")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
+  it("refreshes after cancel", async () => {
+    let promise = createPromise()
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync(() => promise)
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(2)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      receivedHandle.cancel()
+      promise.resolve("result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(4)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(true)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      receivedHandle.refresh(() => "new result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(6)
     expect(receivedHandle!.loading).toBe(false)
     expect(receivedHandle!.cancelled).toBe(false)
     expect(receivedHandle!.errored).toBe(false)
@@ -424,6 +654,53 @@ describe("useAsync", () => {
     expect(receivedHandle!.error).toBe(undefined)
   })
 
+  it("refreshes after resolve", async () => {
+    let promise = createPromise()
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync(() => promise)
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(2)
+    expect(receivedHandle!.loading).toBe(true)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      receivedHandle.resolve("resolved result")
+      promise.resolve("result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(3)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("resolved result")
+    expect(receivedHandle!.error).toBe(undefined)
+
+    await act(() => {
+      receivedHandle.refresh(() => "new result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(5)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("new result")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
   it("reloads after resolve", async () => {
     let promise = createPromise()
     let renders = 0
@@ -451,7 +728,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(3)
     expect(receivedHandle!.loading).toBe(false)
     expect(receivedHandle!.cancelled).toBe(false)
     expect(receivedHandle!.errored).toBe(false)
@@ -463,12 +740,48 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(6)
+    expect(renders).toBe(5)
     expect(receivedHandle!.loading).toBe(false)
     expect(receivedHandle!.cancelled).toBe(false)
     expect(receivedHandle!.errored).toBe(false)
     expect(receivedHandle!.result).toBe("new result")
     expect(receivedHandle!.error).toBe(undefined)
+  })
+
+  it("refresh can be awaited", async () => {
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync()
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(1)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe(undefined)
+    expect(receivedHandle!.error).toBe(undefined)
+
+    let awaitedResult
+
+    await act(async () => {
+      awaitedResult = await receivedHandle.refresh(() => "resolved result")
+      return createTimeout(0)
+    })
+
+    expect(renders).toBe(3)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("resolved result")
+    expect(receivedHandle!.error).toBe(undefined)
+    expect(awaitedResult).toBe("resolved result")
   })
 
   it("reload can be awaited", async () => {
@@ -633,6 +946,27 @@ describe("useAsync", () => {
     expect(receivedHandle!.cancelled).toBe(false)
     expect(receivedHandle!.errored).toBe(false)
     expect(receivedHandle!.result).toBe("result2")
+    expect(receivedHandle!.error).toBe(undefined)
+  })
+
+  it("initializes with value", async () => {
+    let renders = 0
+    let receivedHandle: AsyncHandle<any>
+
+    const Test = () => {
+      renders++
+      receivedHandle = useAsync("result")
+
+      return null
+    }
+
+    const wrapper = mount(<Test />)
+
+    expect(renders).toBe(1)
+    expect(receivedHandle!.loading).toBe(false)
+    expect(receivedHandle!.cancelled).toBe(false)
+    expect(receivedHandle!.errored).toBe(false)
+    expect(receivedHandle!.result).toBe("result")
     expect(receivedHandle!.error).toBe(undefined)
   })
 })
