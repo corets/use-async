@@ -1,9 +1,9 @@
 export type AsyncStatus<TResult> = {
   result: TResult | undefined
-  loading: boolean
-  errored: boolean
+  isLoading: boolean
+  isErrored: boolean
   error: any | undefined
-  cancelled: boolean
+  isCancelled: boolean
 }
 
 export type AsyncHandle<TResult> = AsyncStatus<TResult> & {

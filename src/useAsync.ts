@@ -3,9 +3,9 @@ import { AsyncAction, AsyncCancel, AsyncRefresh, AsyncReload, AsyncStatus, UseAs
 
 const createAsyncStatus = <TResult = any>(status: Partial<AsyncStatus<TResult>> = {}): AsyncStatus<TResult> => {
   return {
-    loading: false,
-    cancelled: false,
-    errored: false,
+    isLoading: false,
+    isCancelled: false,
+    isErrored: false,
     result: undefined,
     error: undefined,
     ...status,
@@ -15,7 +15,7 @@ const createAsyncStatus = <TResult = any>(status: Partial<AsyncStatus<TResult>> 
 export const useAsync: UseAsync = <TResult>(initializer?: AsyncAction<TResult> | TResult, dependencies = [] as any) => {
   const action = typeof initializer === "function" ? (initializer as AsyncAction<TResult>) : undefined
   const result = typeof initializer !== "function" ? initializer : undefined
-  const [status, setStatus] = useState(createAsyncStatus({ loading: !!action, result }))
+  const [status, setStatus] = useState(createAsyncStatus({ isLoading: !!action, result }))
   const invocationRef = useRef(0)
 
   const refresh: AsyncRefresh<TResult> = useCallback(
@@ -24,7 +24,7 @@ export const useAsync: UseAsync = <TResult>(initializer?: AsyncAction<TResult> |
         return status.result
       }
 
-      setStatus((status) => createAsyncStatus({ ...status, cancelled: false }))
+      setStatus((status) => createAsyncStatus({ ...status, isCancelled: false }))
 
       const invocation = invocationRef.current + 1
       invocationRef.current = invocation
@@ -34,7 +34,7 @@ export const useAsync: UseAsync = <TResult>(initializer?: AsyncAction<TResult> |
 
         if (invocation === invocationRef.current) {
           setStatus((status) => {
-            if (status.cancelled) {
+            if (status.isCancelled) {
               return status
             }
 
@@ -49,7 +49,7 @@ export const useAsync: UseAsync = <TResult>(initializer?: AsyncAction<TResult> |
         if (invocation === invocationRef.current) {
           setStatus(
             createAsyncStatus({
-              errored: true,
+              isErrored: true,
               error: error,
             })
           )
@@ -65,7 +65,7 @@ export const useAsync: UseAsync = <TResult>(initializer?: AsyncAction<TResult> |
         return status.result
       }
 
-      setStatus(createAsyncStatus({ loading: true }))
+      setStatus(createAsyncStatus({ isLoading: true }))
 
       return refresh(newAction)
     },
@@ -74,12 +74,12 @@ export const useAsync: UseAsync = <TResult>(initializer?: AsyncAction<TResult> |
 
   const cancel: AsyncCancel = useCallback(() => {
     setStatus((status) => {
-      if (!status.loading || status.cancelled) {
+      if (!status.isLoading || status.isCancelled) {
         return status
       }
 
       return createAsyncStatus({
-        cancelled: true,
+        isCancelled: true,
       })
     })
   }, [])
