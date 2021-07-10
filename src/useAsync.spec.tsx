@@ -227,9 +227,9 @@ describe("useAsync", () => {
       receivedHandle.cancel()
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(5)
     expect(receivedHandle!.isLoading).toBe(false)
-    expect(receivedHandle!.isCancelled).toBe(false)
+    expect(receivedHandle!.isCancelled).toBe(true)
     expect(receivedHandle!.isErrored).toBe(false)
     expect(receivedHandle!.result).toBe("new result")
     expect(receivedHandle!.error).toBe(undefined)

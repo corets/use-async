@@ -68,10 +68,11 @@ export const useAsync: UseAsync = <TResult>(
   )
 
   const cancel: AsyncCancel = useCallback(() => {
-    if (status.get().isLoading && !status.get().isCancelled) {
+    if (!status.get().isCancelled) {
       status.set(
         createAsyncStatus({
           isCancelled: true,
+          result: status.get().result,
         })
       )
     }
