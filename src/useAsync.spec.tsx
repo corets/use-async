@@ -1,16 +1,15 @@
 import React from "react"
-import { mount } from "enzyme"
-import { AsyncHandle, useAsync } from "./index"
+import { Async, useAsync } from "./index"
 import { createPromise, createTimeout } from "@corets/promise-helpers"
-import { act } from "react-dom/test-utils"
 import { createValue } from "@corets/value"
 import { useValue } from "@corets/use-value"
+import { act, render } from "@testing-library/react"
 
 describe("useAsync", () => {
   it("loads async action", async () => {
     const promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -19,7 +18,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -43,7 +42,7 @@ describe("useAsync", () => {
 
   it("loads with initial value", async () => {
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -52,7 +51,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(1)
     expect(receivedHandle!.isLoading).toBe(false)
@@ -65,7 +64,7 @@ describe("useAsync", () => {
   it("loads only if not cancelled", async () => {
     const promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -74,7 +73,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -89,7 +88,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(3)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(true)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -100,7 +99,7 @@ describe("useAsync", () => {
   it("loads only if not resolved", async () => {
     const promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -109,7 +108,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -135,7 +134,7 @@ describe("useAsync", () => {
   it("rejects async action", async () => {
     const promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -144,7 +143,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -169,7 +168,7 @@ describe("useAsync", () => {
   it("cancels async action", async () => {
     const promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -178,7 +177,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -193,7 +192,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(3)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(true)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -204,7 +203,7 @@ describe("useAsync", () => {
   it("cancels only if loading is in progress", async () => {
     const promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -213,7 +212,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -228,7 +227,7 @@ describe("useAsync", () => {
       receivedHandle.cancel()
     })
 
-    expect(renders).toBe(5)
+    expect(renders).toBe(4)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(false)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -239,7 +238,7 @@ describe("useAsync", () => {
   it("refreshes async action", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -248,7 +247,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -297,7 +296,7 @@ describe("useAsync", () => {
   it("reloads async action", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -306,7 +305,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -356,7 +355,7 @@ describe("useAsync", () => {
     let promise1 = createPromise()
     let promise2 = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -365,7 +364,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -414,7 +413,7 @@ describe("useAsync", () => {
     let promise1 = createPromise()
     let promise2 = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -423,7 +422,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -471,7 +470,7 @@ describe("useAsync", () => {
   it("refreshes with sync action", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -480,7 +479,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -517,7 +516,7 @@ describe("useAsync", () => {
   it("reloads with sync action", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -526,7 +525,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -563,7 +562,7 @@ describe("useAsync", () => {
   it("refreshes after cancel", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -572,7 +571,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -587,7 +586,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(3)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(true)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -599,7 +598,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(6)
+    expect(renders).toBe(5)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(false)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -610,7 +609,7 @@ describe("useAsync", () => {
   it("reloads after cancel", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -619,7 +618,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -634,7 +633,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(4)
+    expect(renders).toBe(3)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(true)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -646,7 +645,7 @@ describe("useAsync", () => {
       return createTimeout(0)
     })
 
-    expect(renders).toBe(6)
+    expect(renders).toBe(5)
     expect(receivedHandle!.isLoading).toBe(false)
     expect(receivedHandle!.isCancelled).toBe(false)
     expect(receivedHandle!.isErrored).toBe(false)
@@ -657,7 +656,7 @@ describe("useAsync", () => {
   it("refreshes after resolve", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -666,7 +665,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -704,7 +703,7 @@ describe("useAsync", () => {
   it("reloads after resolve", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -713,7 +712,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -750,7 +749,7 @@ describe("useAsync", () => {
 
   it("refresh can be awaited", async () => {
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -759,7 +758,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(1)
     expect(receivedHandle!.isLoading).toBe(false)
@@ -786,7 +785,7 @@ describe("useAsync", () => {
 
   it("reload can be awaited", async () => {
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -795,7 +794,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(1)
     expect(receivedHandle!.isLoading).toBe(false)
@@ -823,7 +822,7 @@ describe("useAsync", () => {
   it("resolves directly", async () => {
     let promise = createPromise()
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -832,7 +831,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -856,7 +855,7 @@ describe("useAsync", () => {
   it("handles simultaneous invocations", async () => {
     const promises = {}
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
     const sharedCount = createValue(0)
 
     const Test = () => {
@@ -873,7 +872,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(2)
     expect(receivedHandle!.isLoading).toBe(true)
@@ -951,7 +950,7 @@ describe("useAsync", () => {
 
   it("initializes with value", async () => {
     let renders = 0
-    let receivedHandle: AsyncHandle<any>
+    let receivedHandle: Async<any>
 
     const Test = () => {
       renders++
@@ -960,7 +959,7 @@ describe("useAsync", () => {
       return null
     }
 
-    const wrapper = mount(<Test />)
+    render(<Test />)
 
     expect(renders).toBe(1)
     expect(receivedHandle!.isLoading).toBe(false)
