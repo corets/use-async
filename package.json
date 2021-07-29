@@ -21,7 +21,7 @@
     "/dist"
   ],
   "repository": "github:corets/use-async",
-  "homepage": "https://corets.github.io/use-async",
+  "homepage": "https://docs.corets.io/hooks/use-async",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
