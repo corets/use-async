@@ -1,2 +1,2 @@
-export * from "./useAsync"
 export * from "./types"
+export * from "./useAsync"

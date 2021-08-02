@@ -1,102 +1,30 @@
-import { useCallback, useEffect, useRef } from "react"
-import { AsyncCancel, AsyncProducer, AsyncRefresh, AsyncReload, AsyncStatus, UseAsync } from "./types"
-import { useValue } from "@corets/use-value"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Async, AsyncProducerWithoutArgs, ObservableAsync } from "@corets/async"
+import { UseAsync } from "./types"
 
-const createAsyncStatus = <TResult = any>(status: Partial<AsyncStatus<TResult>> = {}): AsyncStatus<TResult> => {
-  return {
-    isLoading: false,
-    isRefreshing: false,
-    isCancelled: false,
-    isErrored: false,
-    result: undefined,
-    error: undefined,
-    ...status,
-  }
-}
+export const useAsync: UseAsync = <TResult>(producer, dependencies = [] as any[]) => {
+  const [reference, setReference] = useState(0)
+  const producerRef = useRef(producer as AsyncProducerWithoutArgs<TResult>)
 
-export const useAsync: UseAsync = <TResult>(
-  initializer?: AsyncProducer<TResult> | TResult,
-  dependencies = [] as any
-) => {
-  const action = typeof initializer === "function" ? (initializer as AsyncProducer<TResult>) : undefined
-  const result = typeof initializer !== "function" ? initializer : undefined
-
-  const status = useValue(createAsyncStatus({ isLoading: !!action, result }))
-  const invocationRef = useRef(0)
-
-  const refresh: AsyncRefresh<TResult> = useCallback(
-    async (newAction: AsyncProducer<TResult> | undefined = action) => {
-      if (!newAction) {
-        return status.get().result
-      }
-
-      status.set(createAsyncStatus({ ...status.get(), isRefreshing: true, isCancelled: false }))
-
-      const invocation = invocationRef.current + 1
-      invocationRef.current = invocation
-
-      try {
-        const result = await newAction()
-
-        if (invocation === invocationRef.current) {
-          if (!status.get().isCancelled) {
-            status.set(createAsyncStatus({ result }))
-          }
-        }
-
-        return result
-      } catch (error) {
-        if (invocation === invocationRef.current) {
-          status.set(createAsyncStatus({ isErrored: true, error }))
-        }
-      }
-    },
-    [...dependencies]
-  )
-
-  const reload: AsyncReload<TResult> = useCallback(
-    async (newAction: AsyncProducer<TResult> | undefined = action) => {
-      if (!newAction) {
-        return status.get().result
-      }
-
-      status.set(createAsyncStatus({ isLoading: true }))
-
-      return refresh(newAction)
-    },
-    [...dependencies]
-  )
-
-  const cancel: AsyncCancel = useCallback(() => {
-    if (!status.get().isCancelled) {
-      status.set(
-        createAsyncStatus({
-          isCancelled: true,
-          result: status.get().result,
-        })
-      )
+  const async = useMemo<ObservableAsync<TResult>>(() => {
+    if (producer instanceof Async) {
+      return producer
     }
-  }, [])
 
-  const resolve = useCallback((result: TResult) => {
-    invocationRef.current += 1
-
-    status.set(
-      createAsyncStatus({
-        result: result,
-      })
-    )
+    return new Async(() => producerRef.current())
   }, [])
 
   useEffect(() => {
-    reload(action)
+    return async.listen(() => setReference((previous) => previous + 1))
+  }, [])
+
+  useEffect(() => {
+    producerRef.current = producer
+  }, [producer])
+
+  useEffect(() => {
+    async.run()
   }, dependencies)
 
-  return {
-    ...status.get(),
-    reload,
-    refresh,
-    resolve,
-    cancel,
-  }
+  return async
 }
