@@ -2,29 +2,29 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Async, AsyncProducerWithoutArgs, ObservableAsync } from "@corets/async"
 import { UseAsync } from "./types"
 
-export const useAsync: UseAsync = <TResult>(producer, dependencies = [] as any[]) => {
+export const useAsync: UseAsync = <TResult>(
+  producer: ObservableAsync<TResult> | AsyncProducerWithoutArgs<TResult>,
+  dependencies = [] as any[]
+) => {
   const [reference, setReference] = useState(0)
-  const producerRef = useRef(producer as AsyncProducerWithoutArgs<TResult>)
+  const producerRef = useRef<ObservableAsync<TResult> | AsyncProducerWithoutArgs<TResult>>(producer)
+  producerRef.current = producer
 
   const async = useMemo<ObservableAsync<TResult>>(() => {
-    if (producer instanceof Async) {
-      return producer
+    if (producerRef.current instanceof Async) {
+      return producerRef.current
     }
 
-    return new Async(() => producerRef.current())
-  }, [])
+    return new Async(() => (producerRef.current as AsyncProducerWithoutArgs<TResult>)())
+  }, [producerRef.current instanceof Async ? producerRef.current : undefined])
 
   useEffect(() => {
     return async.listen(() => setReference((previous) => previous + 1))
-  }, [])
-
-  useEffect(() => {
-    producerRef.current = producer
-  }, [producer])
+  }, [async])
 
   useEffect(() => {
     async.run()
-  }, dependencies)
+  }, [...dependencies, async])
 
   return async
 }
